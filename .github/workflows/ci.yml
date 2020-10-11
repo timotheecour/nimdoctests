@@ -11,10 +11,10 @@ jobs:
         # branch: [devel]
         branch: [version-1-2]
         target:
-          # - os: linux
-          #   cpu: amd64
-          - os: macos
+          - os: linux
             cpu: amd64
+          # - os: macos
+          #   cpu: amd64
         include:
           # - target:
           #     os: linux
@@ -127,10 +127,23 @@ jobs:
           rm -rf dist
           rm -rf .git
 
-      - name: Run fusion tests
+      - name: Run nimdoctests tests
         shell: bash
         run: |
-          # cd fusion
           cd nimdoctests
           nimble test
 
+      - name: 'Build documentation'
+        shell: bash
+        # run: ./koch doc --git.commit:devel
+        run: nimble docs
+
+      - name: 'Publish documentation to Github Pages'
+        if: |
+          github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.target == 'linux'
+        uses: crazy-max/ghaction-github-pages@v1
+        with:
+          # build_dir: doc/html
+          build_dir: htmldocs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
