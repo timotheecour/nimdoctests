@@ -1,149 +1,87 @@
-name: test CI
+# see: https://github.com/jiro4989/setup-nim-action
+# for pull_request: github.event.head_commit.message = ""
+# for push: github.event.head_commit.message = "push"
+# for pull_request: github.event.pull_request.title = "name_of_PR"
+# for push: github.event.pull_request.title = "last_commit_msg"
 
+# https://github.com/marketplace/actions/get-latest-commit-on-pr
+# https://github.com/marketplace/actions/get-current-pull-request
+
+name: CI docs
+# on: [push]
 on: [push, pull_request]
+
+    # if: |
+    #   !contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[skip ci]')
+    # # if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    #   # !contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[skip ci]')
+    # # if: |
+    # #   !contains(format('a{0}b{1}c{2}d', 'x0', 'x1'), '[skip ci]')
 
 jobs:
   build:
+    if: |
+      !contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[skip ci]')
     strategy:
       fail-fast: false
       matrix:
-        # branch: [version-1-0, version-1-2, devel]
-        # branch: [devel]
-        branch: [version-1-2]
-        target:
-          - os: linux
-            cpu: amd64
-          # - os: macos
-          #   cpu: amd64
+        # target: [linux, windows, osx]
+        target: [linux]
+        # [ '1.0.0', '1.2.0', 'stable', 'devel' ]
+        nimVersion: ['1.0.0', '1.2.0']
         include:
-          # - target:
-          #     os: linux
-          #   builder: ubuntu-18.04
-          - target:
-              os: macos
-            builder: macos-10.15
-    name: '${{ matrix.target.os }}-${{ matrix.target.cpu }} (${{ matrix.branch }})'
-    runs-on: ${{ matrix.builder }}
+          - target: linux
+            os: ubuntu-20.04
+            # os: ubuntu-18.04
+            # os: ubuntu-latest
+          # - target: windows
+          #   os: windows-2019
+          # - target: osx
+          #   os: macos-10.15
+
+    name: ${{ matrix.target }} - ${{ matrix.nimVersion }}
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
+      - name: Get the latest commit on PR
+        id: get-latest-commit
+        uses: ActionsRML/get-PR-latest-commit@v1
+      - uses: actions/checkout@master
+      - uses: jiro4989/setup-nim-action@v1.2
         with:
-          # path: fusion # CHECKME
-          path: nimdoctests # CHECKME
-
-      # - name: Install dependencies (Linux amd64)
-      #   if: runner.os == 'Linux' && matrix.target.cpu == 'amd64'
-      #   run: |
-      #     sudo DEBIAN_FRONTEND='noninteractive' apt-fast install \
-      #       --no-install-recommends -yq <packages here>
-
-      # - name: Install dependencies (macOS)
-      #   if: runner.os == 'macOS'
-      #   run: brew install <packages here>
-
-      - name: Setup environment
-        shell: bash
-        run: echo '::add-path::${{ github.workspace }}/nim/bin'
-
-      - name: Get latest Nim commit hash
-        id: versions
+          nim-version: ${{ matrix.nimVersion }}
+      - name: run tests and docs
         shell: bash
         run: |
-          getHash() {
-            git ls-remote "https://github.com/$1" "${2:-HEAD}" | cut -f 1
-          }
-          nimHash=$(getHash nim-lang/Nim '${{ matrix.branch }}')
-          csourcesHash=$(getHash nim-lang/csources)
-          echo "::set-output name=nim::$nimHash"
-          echo "::set-output name=csources::$csourcesHash"
-
-      - name: Restore prebuilt Nim from cache
-        id: nim-cache
-        uses: actions/cache@v1
-        with:
-          path: nim
-          key: 'nim-${{ matrix.target.os }}-${{ matrix.target.cpu }}-${{ steps.versions.outputs.nim }}'
-
-      - name: Restore prebuilt csources from cache
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        id: csources-cache
-        uses: actions/cache@v1
-        with:
-          path: csources/bin
-          key: 'csources-${{ matrix.target.os }}-${{ matrix.target.cpu }}-${{ steps.versions.outputs.csources }}'
-
-      - name: Checkout Nim csources
-        if: >
-          steps.csources-cache.outputs.cache-hit != 'true' &&
-          steps.nim-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
-        with:
-          repository: nim-lang/csources
-          path: csources
-          ref: ${{ steps.versions.outputs.csources }}
-
-      - name: Checkout Nim
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
-        with:
-          repository: nim-lang/Nim
-          path: nim
-          ref: ${{ steps.versions.outputs.nim }}
-
-      - name: Build Nim and associated tools
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          ncpu=
-          ext=
-          case '${{ runner.os }}' in
-          'Linux')
-            ncpu=$(nproc)
-            ;;
-          'macOS')
-            ncpu=$(sysctl -n hw.ncpu)
-            ;;
-          'Windows')
-            ncpu=$NUMBER_OF_PROCESSORS
-            ext=.exe
-            ;;
-          esac
-          [[ -z "$ncpu" || $ncpu -le 0 ]] && ncpu=1
-
-          if [[ ! -e csources/bin/nim$ext ]]; then
-            make -C csources -j $ncpu CC=gcc ucpu='${{ matrix.target.cpu }}'
-          else
-            echo 'Using prebuilt csources'
-          fi
-          cp -v csources/bin/nim$ext nim/bin
-
-          cd nim
-          nim c koch
-          ./koch boot -d:release
-          ./koch tools -d:release
-          # clean up to save cache space
-          rm koch
-          rm -rf nimcache
-          rm -rf dist
-          rm -rf .git
-
-      - name: Run nimdoctests tests
-        shell: bash
-        run: |
-          cd nimdoctests
+          echo ${{ github.event_name }}
+          echo "latest_commit_message:"
+          echo ${{ steps.get-latest-commit.outputs.latest_commit_message }}
+          echo ${{ matrix.target }}
+          echo ${{ github.event.head_commit.message }}
+          echo ${{ github.event.pull_request.title }}
+          echo ${{ github.ref }}
           nimble test
+          nimble docs
+          cp docs/index.html htmldocs/index2.html
 
-      - name: 'Build documentation'
-        shell: bash
-        # run: ./koch doc --git.commit:devel
-        run: nimble docs
+      #   uses: crazy-max/ghaction-github-pages@v1
+      #   with:
+      #     build_dir: docs2
 
-      - name: 'Publish documentation to Github Pages'
+      - name: Deploy docs
+        ## note: it takes a few seconds to take effect after completes
+        uses: JamesIves/github-pages-deploy-action@3.6.2
+
+        ## note: refs/heads/pr_simple_1 for push, refs/pull/3/merge for pull_request
+        ## github.ref == 'refs/heads/master'
         if: |
-          github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.target == 'linux'
-        uses: crazy-max/ghaction-github-pages@v1
+          matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request'
+
         with:
-          # build_dir: doc/html
-          build_dir: htmldocs
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: htmldocs # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
+
+# TODO: add caching
+

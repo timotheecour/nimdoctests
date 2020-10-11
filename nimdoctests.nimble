@@ -13,4 +13,7 @@ task test, "Generate the documentation":
   exec "echo D20201010T220856"
 
 task docs, "Generate the documentation":
-  exec "nim doc --project --outdir:htmldocs src/main.nim"
+  exec "nim doc --project --outdir:htmldocs src/index.nim"
+  # --experimental:vmopsDanger
+  # TODO: nim r
+  exec "nim c -r --hints:off src/info.nim"
