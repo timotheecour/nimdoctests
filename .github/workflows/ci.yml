@@ -139,6 +139,7 @@ jobs:
         # run: ./koch doc --git.commit:devel
         run: |
           pwd
+          ls
           nimble docs
 
       - name: 'Publish documentation to Github Pages'
