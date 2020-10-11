@@ -127,7 +127,7 @@ jobs:
           rm -rf dist
           rm -rf .git
 
-      - name: Run nimdoctests tests
+      - name: Run nimdoctests tests v2
         shell: bash
         run: |
           cd nimdoctests
