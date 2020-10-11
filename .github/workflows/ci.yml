@@ -13,12 +13,12 @@ jobs:
         target:
           - os: linux
             cpu: amd64
-          # - os: macos
-          #   cpu: amd64
+          - os: macos
+            cpu: amd64
         include:
-          # - target:
-          #     os: linux
-          #   builder: ubuntu-18.04
+          - target:
+              os: linux
+            builder: ubuntu-18.04
           - target:
               os: macos
             builder: macos-10.15
@@ -127,16 +127,20 @@ jobs:
           rm -rf dist
           rm -rf .git
 
-      - name: Run nimdoctests tests
+      - name: Run nimdoctests tests v2
         shell: bash
         run: |
-          cd nimdoctests
+          pwd
+          # cd nimdoctests
           nimble test
 
       - name: 'Build documentation'
         shell: bash
         # run: ./koch doc --git.commit:devel
-        run: nimble docs
+        run: |
+          pwd
+          ls
+          nimble docs
 
       - name: 'Publish documentation to Github Pages'
         if: |
