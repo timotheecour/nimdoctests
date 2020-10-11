@@ -130,13 +130,16 @@ jobs:
       - name: Run nimdoctests tests v2
         shell: bash
         run: |
-          cd nimdoctests
+          pwd
+          # cd nimdoctests
           nimble test
 
       - name: 'Build documentation'
         shell: bash
         # run: ./koch doc --git.commit:devel
-        run: nimble docs
+        run: |
+          pwd
+          nimble docs
 
       - name: 'Publish documentation to Github Pages'
         if: |
