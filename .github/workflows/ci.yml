@@ -51,8 +51,12 @@ jobs:
 
       - name: get commit message
         run: |
-           echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
-           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
+          echo_run() { echo "$@"": " && "$@" ; }
+          echo_run pwd
+          echo_run ls
+          echo_run ls -a
+          echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
+          export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
 
       - name: Get the latest commit on PR
         id: get-latest-commit
