@@ -37,7 +37,7 @@ jobs:
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
           echo zook:{{contains(env.TIM_PR_SKIP, '[ci skip]')}}
-          echo zook2:{{matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]')}}
+          echo zook2:"{{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]') }}""
           echo_run nimble test
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
