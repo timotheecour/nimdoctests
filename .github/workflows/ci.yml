@@ -68,7 +68,6 @@ jobs:
           echo github.ref: ${{ github.ref }}
           echo pull_request.head.sha: ${{ github.event.pull_request.head.sha }}
           echo_run nimble test
-          # echo_run echo ${{ toJson(github) }}
           echo_run echo "$GITHUB_CONTEXT"
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
