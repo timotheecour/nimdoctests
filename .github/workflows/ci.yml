@@ -31,7 +31,7 @@ jobs:
           # echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
           echo "TIM_DEPLOY=${{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'push'}}" >> $GITHUB_ENV
           tmp="$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}"
-          if [[ "$tmp" == *"[ci skip]"* ]]; then echo "TIM_NOSKIP2=true >> $GITHUB_ENV; fi
+          if [[ "$tmp" == *"[ci skip]"* ]]; then echo "TIM_NOSKIP2=true" >> $GITHUB_ENV; fi
       - run: |
           echo "TIM_NOSKIP=${{ !contains(format('{0}-{1}-{2}', env.TIM_PR_MSG, github.event.head_commit.message, github.event.pull_request.title), '[ci skip]')}}" >> $GITHUB_ENV
 
