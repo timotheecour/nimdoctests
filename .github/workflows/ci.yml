@@ -56,7 +56,9 @@ jobs:
           echo_run pwd
           # echo_run ls
           echo_run git log --oneline -n 5 | cat
+          echo_run echo $GITHUB_SHA
           echo_run echo github.event.after: ${{ github.event.after }}
+          echo_run echo github.event.before: ${{ github.event.before }}
           echo_run echo github.event.pull_request.head.sha: ${{ github.event.pull_request.head.sha }}
           # stays but deprecated
           echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
