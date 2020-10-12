@@ -22,16 +22,16 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 2
+
       - name: get commit message
-          #echo "TIM_NOSKIP=${{ !contains($TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}} >> $GITHUB_ENV
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
           TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
           echo "TIM_PR_MSG=$TIM_PR_MSG" >> $GITHUB_ENV
-          echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
-          echo "TIM_TMP1=${{env.TIM_PR_MSG}}"
-          echo "TIM_NOSKIP=true" >> $GITHUB_ENV
+          # echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
           echo "TIM_DEPLOY=${{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'push'}}" >> $GITHUB_ENV
+      - run: |
+          echo "TIM_NOSKIP=${{ !contains($TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}} >> $GITHUB_ENV
 
       - uses: jiro4989/setup-nim-action@v1
         if: env.TIM_NOSKIP=='true'
