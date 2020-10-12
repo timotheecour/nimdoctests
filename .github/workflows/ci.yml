@@ -27,8 +27,8 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
       - uses: actions/checkout@master
-        # with:
-        #   fetch-depth: 3
+        with:
+          fetch-depth: 2
       - name: get commit message
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
