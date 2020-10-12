@@ -45,9 +45,9 @@ jobs:
     steps:
       - name: Get the latest commit on PR
         id: get-latest-commit
-        uses: ActionsRML/get-PR-latest-commit@v1
+        uses: ActionsRML/get-PR-latest-commit@v1.2
       - uses: actions/checkout@master
-      - uses: jiro4989/setup-nim-action@v1.2
+      - uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: ${{ matrix.nimVersion }}
       - name: run tests and docs
