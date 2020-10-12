@@ -29,26 +29,24 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 2
+
       - name: get commit message
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
           TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
-          echo TIM_PR_MSG: $TIM_PR_MSG
           echo "TIM_PR_MSG=$TIM_PR_MSG" >> $GITHUB_ENV
+          echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
 
-      - name: Get the latest commit on PR
-        id: get-latest-commit
-        uses: ActionsRML/get-PR-latest-commit@v1.2
       - uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: ${{ matrix.nimVersion }}
+
       - name: run tests and docs
         shell: bash
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
-          echo github.event_name: ${{ github.event_name }}
-          echo_run echo latest_commit_message: ${{ steps.get-latest-commit.outputs.latest_commit_message }}
           echo TIM_PR_MSG: $TIM_PR_MSG
+          echo TIM_PR_SKIP: $TIM_PR_SKIP
           echo_run nimble test
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
