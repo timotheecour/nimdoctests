@@ -30,8 +30,10 @@ jobs:
           echo "TIM_PR_MSG=$TIM_PR_MSG" >> $GITHUB_ENV
           # echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
           echo "TIM_DEPLOY=${{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'push'}}" >> $GITHUB_ENV
+          tmp="$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}"
+          if [[ "$tmp" == *"[ci skip]"* ]]; then echo "TIM_NOSKIP2=true >> $GITHUB_ENV; fi
       - run: |
-          echo "TIM_NOSKIP=${{ !contains($TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}} >> $GITHUB_ENV
+          echo "TIM_NOSKIP=${{ !contains(env.TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}} >> $GITHUB_ENV
 
       - uses: jiro4989/setup-nim-action@v1
         if: env.TIM_NOSKIP=='true'
@@ -43,7 +45,7 @@ jobs:
         shell: bash
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
-          echo_run echo TIM_TMP1:$TIM_TMP1
+          echo_run echo TIM_NOSKIP2:$TIM_NOSKIP2
           echo_run nimble test
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
