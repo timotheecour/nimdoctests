@@ -42,6 +42,7 @@ jobs:
           echo_run() { echo "$@"": " && "$@" ; }
           echo TIM_PR_MSG: $TIM_PR_MSG
           echo TIM_PR_SKIP: $TIM_PR_SKIP
+          echo env.TIM_PR_SKIP: ${{env.TIM_PR_SKIP}}
           echo_run nimble test
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
