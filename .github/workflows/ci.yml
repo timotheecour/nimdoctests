@@ -54,11 +54,14 @@ jobs:
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
           echo_run pwd
-          echo_run ls
-          echo_run ls -a
+          # echo_run ls
+          echo_run git log --oneline -n 5 | cat
+          echo_run echo github.event.after: ${{ github.event.after }}
+          echo_run echo github.event.pull_request.head.sha: ${{ github.event.pull_request.head.sha }}
+          # stays but deprecated
           echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
+          # doesn't stay
           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
-          export env_foo3=val3
 
       - name: Get the latest commit on PR
         id: get-latest-commit
