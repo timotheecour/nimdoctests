@@ -42,6 +42,7 @@ jobs:
     name: ${{ matrix.target }} - ${{ matrix.nimVersion }}
     runs-on: ${{ matrix.os }}
 
+
     steps:
       - name: Get the latest commit on PR
         id: get-latest-commit
