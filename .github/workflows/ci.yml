@@ -33,7 +33,7 @@ jobs:
           tmp="$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}"
           if [[ "$tmp" == *"[ci skip]"* ]]; then echo "TIM_NOSKIP2=true >> $GITHUB_ENV; fi
       - run: |
-          echo "TIM_NOSKIP=${{ !contains(env.TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}} >> $GITHUB_ENV
+          echo "TIM_NOSKIP=${{ !contains(env.TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}", '[ci skip]')}}" >> $GITHUB_ENV
 
       - uses: jiro4989/setup-nim-action@v1
         if: env.TIM_NOSKIP=='true'
