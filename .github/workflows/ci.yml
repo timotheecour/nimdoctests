@@ -49,6 +49,11 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
+      - name: get commit message
+        run: |
+           echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
+           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
+
       - name: Get the latest commit on PR
         id: get-latest-commit
         uses: ActionsRML/get-PR-latest-commit@v1.2
@@ -69,6 +74,7 @@ jobs:
           echo pull_request.head.sha: ${{ github.event.pull_request.head.sha }}
           echo_run nimble test
           echo_run echo "$GITHUB_CONTEXT"
+          echo_run env
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
 
