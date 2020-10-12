@@ -54,16 +54,22 @@ jobs:
       - name: run tests and docs
         shell: bash
         run: |
-          echo ${{ github.event_name }}
-          echo "latest_commit_message:"
-          echo ${{ steps.get-latest-commit.outputs.latest_commit_message }}
-          echo ${{ matrix.target }}
-          echo ${{ github.event.head_commit.message }}
-          echo ${{ github.event.pull_request.title }}
-          echo ${{ github.ref }}
-          nimble test
-          nimble docs
-          cp docs/index.html htmldocs/index2.html
+          echo_run() { echo "$@"": " && "$@" ; }
+          echo_run echo ${{ github.event_name }}
+          echo_run echo "latest_commit_message:"
+          echo_run echo ${{ steps.get-latest-commit.outputs.latest_commit_message }}
+          echo_run echo ${{ matrix.target }}
+          echo_run echo ${{ github.event.head_commit.message }}
+          echo_run echo ${{ github.event.pull_request.title }}
+          echo_run echo ${{ github.ref }}
+          echo_run echo "head.sha:"
+          echo_run echo ${{ github.event.pull_request.head.sha }}
+          echo_run echo "head.sha2"
+          echo_run echo ${{ github.event.pull_request.head.sha }}
+          echo_run nimble test
+          echo_run echo ${{ toJson(github) }}
+          echo_run nimble docs
+          echo_run cp docs/index.html htmldocs/index2.html
 
       #   uses: crazy-max/ghaction-github-pages@v1
       #   with:
