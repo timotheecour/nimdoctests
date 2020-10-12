@@ -67,9 +67,11 @@ jobs:
           # doesn't stay
           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
           echo here
-          echo_run git log --format=%B -n 1 ${{ github.event.after }}
-          echo_run git log --format=%B -n 1 ${{ github.event.before }}
-          echo_run git log --format=%B -n 1 GITHUB_SHA
+          TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
+          echo ::set-env name=commitmsg::$TIM_PR_MSG
+          # echo_run git log --format=%B -n 1 ${{ github.event.after }}
+          # echo_run git log --format=%B -n 1 ${{ github.event.before }}
+          # echo_run git log --format=%B -n 1 $GITHUB_SHA
 
       - name: Get the latest commit on PR
         id: get-latest-commit
@@ -83,6 +85,7 @@ jobs:
           echo_run() { echo "$@"": " && "$@" ; }
           echo github.event_name: ${{ github.event_name }}
           echo_run echo latest_commit_message: ${{ steps.get-latest-commit.outputs.latest_commit_message }}
+          echo_run echo TIM_PR_MSG: $TIM_PR_MSG
           echo target: ${{ matrix.target }}
           echo head_commit.message: ${{ github.event.head_commit.message }}
           echo pull_request.title: ${{ github.event.pull_request.title }}
