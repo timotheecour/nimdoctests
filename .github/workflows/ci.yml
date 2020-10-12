@@ -1,13 +1,10 @@
 # see D20201012T145430
 
 name: CI docs
-# on: [push]
 on: [push, pull_request]
 
 jobs:
   build:
-    if: |
-      !contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[skip ci]')
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +21,6 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 2
-
       - name: get commit message
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
@@ -40,21 +36,14 @@ jobs:
         shell: bash
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
-          echo TIM_PR_MSG: $TIM_PR_MSG
-          echo TIM_PR_SKIP: $TIM_PR_SKIP
-          echo env.TIM_PR_SKIP: ${{env.TIM_PR_SKIP}}
+          echo zook:{{contains(env.TIM_PR_SKIP, '[ci skip]')}}
+          echo zook2:{{matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]')}}
           echo_run nimble test
           echo_run nimble docs
           echo_run cp docs/index.html htmldocs/index2.html
 
-      #   uses: crazy-max/ghaction-github-pages@v1
-      #   with:
-      #     build_dir: docs2
-
       - name: Deploy docs
-        ## note: it takes a few seconds to take effect after completes
         uses: JamesIves/github-pages-deploy-action@3.6.2
-
         if: |
           matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]')
 
