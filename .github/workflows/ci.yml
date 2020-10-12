@@ -27,12 +27,15 @@ jobs:
           TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
           echo "TIM_PR_MSG=$TIM_PR_MSG" >> $GITHUB_ENV
           echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
+          echo "TIM_RUN=${{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]')}}" >> $GITHUB_ENV
 
       - uses: jiro4989/setup-nim-action@v1
+        if: env.TIM_RUN=='true'
         with:
           nim-version: ${{ matrix.nimVersion }}
 
       - name: run tests and docs
+        if: env.TIM_RUN=='true'
         shell: bash
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
@@ -44,9 +47,7 @@ jobs:
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@3.6.2
-        if: |
-          matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(env.TIM_PR_SKIP, '[ci skip]')
-
+        if: env.TIM_RUN=='true'
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
