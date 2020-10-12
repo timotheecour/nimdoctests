@@ -68,7 +68,9 @@ jobs:
           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
           echo here
           TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
-          echo ::set-env name=commitmsg::$TIM_PR_MSG
+          echo TIM_PR_MSG: $TIM_PR_MSG
+          echo ::set-env name=TIM_PR_MSG2::$TIM_PR_MSG
+          echo "export TIM_PR_MSG=$TIM_PR_MSG" > /tmp/TIM_PR_MSG.sh
           # echo_run git log --format=%B -n 1 ${{ github.event.after }}
           # echo_run git log --format=%B -n 1 ${{ github.event.before }}
           # echo_run git log --format=%B -n 1 $GITHUB_SHA
@@ -85,7 +87,8 @@ jobs:
           echo_run() { echo "$@"": " && "$@" ; }
           echo github.event_name: ${{ github.event_name }}
           echo_run echo latest_commit_message: ${{ steps.get-latest-commit.outputs.latest_commit_message }}
-          echo_run echo TIM_PR_MSG: $TIM_PR_MSG
+          echo_run echo TIM_PR_MSG2: $TIM_PR_MSG2
+          echo_run cat /tmp/TIM_PR_MSG.sh
           echo target: ${{ matrix.target }}
           echo head_commit.message: ${{ github.event.head_commit.message }}
           echo pull_request.title: ${{ github.event.pull_request.title }}
