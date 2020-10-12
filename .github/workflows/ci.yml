@@ -49,6 +49,7 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
+      - uses: actions/checkout@master
       - name: get commit message
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
@@ -57,11 +58,11 @@ jobs:
           echo_run ls -a
           echo ::set-env name=commitmsg::$(git log --format=%B -n 1 ${{ github.event.after }})
           export commitmsg2=$(git log --format=%B -n 1 ${{ github.event.after }})
+          export env_foo3=val3
 
       - name: Get the latest commit on PR
         id: get-latest-commit
         uses: ActionsRML/get-PR-latest-commit@v1.2
-      - uses: actions/checkout@master
       - uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: ${{ matrix.nimVersion }}
