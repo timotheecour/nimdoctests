@@ -39,7 +39,7 @@ jobs:
           nim-version: ${{ matrix.nimVersion }}
 
       - name: run tests and docs
-        if: env.TIM_NOSKIP==true
+        if: env.TIM_NOSKIP=='true'
         shell: bash
         run: |
           echo_run() { echo "$@"": " && "$@" ; }
@@ -50,7 +50,7 @@ jobs:
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@3.6.2
-        if: env.TIM_NOSKIP=='true' && env.TIM_DEPLOY==true
+        if: env.TIM_NOSKIP=='true' && env.TIM_DEPLOY=='true'
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
