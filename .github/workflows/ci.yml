@@ -21,11 +21,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
       - uses: actions/checkout@master
         with:
           fetch-depth: 2
@@ -62,7 +57,7 @@ jobs:
         ## note: refs/heads/pr_simple_1 for push, refs/pull/3/merge for pull_request
         ## github.ref == 'refs/heads/master'
         if: |
-          matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(steps.get-latest-commit.outputs.latest_commit_message, '[ci skip]')
+          matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'pull_request' && !contains(${{ env.TIM_PR_SKIP }}, '[ci skip]')
 
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
