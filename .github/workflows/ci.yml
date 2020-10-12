@@ -18,6 +18,7 @@ on: [push, pull_request]
     # # if: |
     # #   !contains(format('a{0}b{1}c{2}d', 'x0', 'x1'), '[skip ci]')
 
+
 jobs:
   build:
     if: |
