@@ -1,3 +1,3 @@
-nim: /Users/runner/.choosenim/toolchains/nim-1.2.0/bin/nim
-t: 2020-10-12T02:23:42+00:00
+nim: /home/runner/.choosenim/toolchains/nim-1.2.0/bin/nim
+t: 2020-10-12T02:29:34+00:00
 NimVersion: 1.2.0
