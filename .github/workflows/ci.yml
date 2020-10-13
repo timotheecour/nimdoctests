@@ -1,5 +1,7 @@
-name: test CI
+# see D20201012T145430
+# D20201012T162358:here
 
+name: CI docs
 on: [push, pull_request]
 
 jobs:
@@ -7,143 +9,53 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # branch: [version-1-0, version-1-2, devel]
-        # branch: [devel]
-        branch: [version-1-2]
-        target:
-          - os: linux
-            cpu: amd64
-          # - os: macos
-          #   cpu: amd64
+        target: [linux]
+        nimVersion: ['1.0.0', '1.2.0']
         include:
-          # - target:
-          #     os: linux
-          #   builder: ubuntu-18.04
-          - target:
-              os: macos
-            builder: macos-10.15
-    name: '${{ matrix.target.os }}-${{ matrix.target.cpu }} (${{ matrix.branch }})'
-    runs-on: ${{ matrix.builder }}
+          - target: linux
+            os: ubuntu-20.04
+
+    name: ${{ matrix.target }} - ${{ matrix.nimVersion }}
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
+      - uses: actions/checkout@master
         with:
-          # path: fusion # CHECKME
-          path: nimdoctests # CHECKME
+          fetch-depth: 2
 
-      # - name: Install dependencies (Linux amd64)
-      #   if: runner.os == 'Linux' && matrix.target.cpu == 'amd64'
-      #   run: |
-      #     sudo DEBIAN_FRONTEND='noninteractive' apt-fast install \
-      #       --no-install-recommends -yq <packages here>
+      - name: get commit message
+        run: |
+          echo_run() { echo "$@"": " && "$@" ; }
+          TIM_PR_MSG=$(git log --format=%B -n 1 ${{ github.event.after }})
+          echo "TIM_PR_MSG=$TIM_PR_MSG" >> $GITHUB_ENV
+          # echo "TIM_PR_SKIP=$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}" >> $GITHUB_ENV
+          echo "TIM_DEPLOY=${{ matrix.target == 'linux' && matrix.nimVersion == '1.2.0' && github.event_name == 'push'}}" >> $GITHUB_ENV
+          tmp="$TIM_PR_MSG-${{github.event.head_commit.message}}-${{github.event.pull_request.title}}"
+          if [[ "$tmp" != *"[ci skip]"* ]]; then echo "TIM_NOSKIP=true" >> $GITHUB_ENV; fi
 
-      # - name: Install dependencies (macOS)
-      #   if: runner.os == 'macOS'
-      #   run: brew install <packages here>
+      - uses: jiro4989/setup-nim-action@v1
+        if: env.TIM_NOSKIP=='true'
+        with:
+          nim-version: ${{ matrix.nimVersion }}
 
-      - name: Setup environment
-        shell: bash
-        run: echo '::add-path::${{ github.workspace }}/nim/bin'
-
-      - name: Get latest Nim commit hash
-        id: versions
+      - name: run tests and docs
+        if: env.TIM_NOSKIP=='true'
         shell: bash
         run: |
-          getHash() {
-            git ls-remote "https://github.com/$1" "${2:-HEAD}" | cut -f 1
-          }
-          nimHash=$(getHash nim-lang/Nim '${{ matrix.branch }}')
-          csourcesHash=$(getHash nim-lang/csources)
-          echo "::set-output name=nim::$nimHash"
-          echo "::set-output name=csources::$csourcesHash"
+          echo_run() { echo "$@"": " && "$@" ; }
+          echo_run echo TIM_NOSKIP2:$TIM_NOSKIP2
+          echo_run echo TIM_NOSKIP3:$TIM_NOSKIP3
+          echo_run nimble test
+          echo_run nimble docs
+          echo_run cp docs/index.html htmldocs/index2.html
 
-      - name: Restore prebuilt Nim from cache
-        id: nim-cache
-        uses: actions/cache@v1
+      - name: Deploy docs
+        uses: JamesIves/github-pages-deploy-action@3.6.2
+        if: env.TIM_NOSKIP=='true' && env.TIM_DEPLOY=='true'
         with:
-          path: nim
-          key: 'nim-${{ matrix.target.os }}-${{ matrix.target.cpu }}-${{ steps.versions.outputs.nim }}'
-
-      - name: Restore prebuilt csources from cache
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        id: csources-cache
-        uses: actions/cache@v1
-        with:
-          path: csources/bin
-          key: 'csources-${{ matrix.target.os }}-${{ matrix.target.cpu }}-${{ steps.versions.outputs.csources }}'
-
-      - name: Checkout Nim csources
-        if: >
-          steps.csources-cache.outputs.cache-hit != 'true' &&
-          steps.nim-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
-        with:
-          repository: nim-lang/csources
-          path: csources
-          ref: ${{ steps.versions.outputs.csources }}
-
-      - name: Checkout Nim
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
-        with:
-          repository: nim-lang/Nim
-          path: nim
-          ref: ${{ steps.versions.outputs.nim }}
-
-      - name: Build Nim and associated tools
-        if: steps.nim-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          ncpu=
-          ext=
-          case '${{ runner.os }}' in
-          'Linux')
-            ncpu=$(nproc)
-            ;;
-          'macOS')
-            ncpu=$(sysctl -n hw.ncpu)
-            ;;
-          'Windows')
-            ncpu=$NUMBER_OF_PROCESSORS
-            ext=.exe
-            ;;
-          esac
-          [[ -z "$ncpu" || $ncpu -le 0 ]] && ncpu=1
-
-          if [[ ! -e csources/bin/nim$ext ]]; then
-            make -C csources -j $ncpu CC=gcc ucpu='${{ matrix.target.cpu }}'
-          else
-            echo 'Using prebuilt csources'
-          fi
-          cp -v csources/bin/nim$ext nim/bin
-
-          cd nim
-          nim c koch
-          ./koch boot -d:release
-          ./koch tools -d:release
-          # clean up to save cache space
-          rm koch
-          rm -rf nimcache
-          rm -rf dist
-          rm -rf .git
-
-      - name: Run nimdoctests tests
-        shell: bash
-        run: |
-          cd nimdoctests
-          nimble test
-
-      - name: 'Build documentation'
-        shell: bash
-        # run: ./koch doc --git.commit:devel
-        run: nimble docs
-
-      - name: 'Publish documentation to Github Pages'
-        if: |
-          github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.target == 'linux'
-        uses: crazy-max/ghaction-github-pages@v1
-        with:
-          # build_dir: doc/html
-          build_dir: htmldocs
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: htmldocs # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
+
+# TODO: add caching
